@@ -55,8 +55,9 @@ if df is not None and not df.empty:
     sort_by_year = st.radio("Tahun yang dijadikan acuan pengurutan:", ["2024", "2025"], horizontal=True)
     sort_by_year = int(sort_by_year)
 
-    def prepare_table(metric):
-        pivot_df = df_2024_2025.pivot_table(
+    def prepare_table(metric, subset_df=None):
+        data = subset_df if subset_df is not None else df_2024_2025
+        pivot_df = data.pivot_table(
             index='Kategori Produk', 
             columns='Tahun', 
             values=metric, 
@@ -133,22 +134,62 @@ if df is not None and not df.empty:
         }).applymap(style_growth, subset=['Growth (%)']).applymap(style_gap, subset=['Gap'])
         return styled_df
 
-    st.subheader("📈 Tabel Market Share (%)")
+    st.subheader("📊 Tabel Ringkasan Keseluruhan")
+    st.subheader("📈 Market Share (%)")
     sort_order_ms = st.selectbox("Urutkan Market Share berdasarkan:", ["Large to Small", "Small to Large"], key="ms_sort")
     df_ms = prepare_table('Market Share (%)')
     st.write(sort_table(df_ms, order='desc' if sort_order_ms == "Large to Small" else 'asc', metric='Market Share (%)'))
 
-    st.subheader("💰 Tabel Volume Sales (IDR)")
+    st.subheader("💰 Volume Sales (IDR)")
     sort_order_vs = st.selectbox("Urutkan Volume Sales berdasarkan:", ["Large to Small", "Small to Large"], key="vs_sort")
     df_vs = prepare_table('Volume Sales (IDR)')
     st.write(sort_table(df_vs, order='desc' if sort_order_vs == "Large to Small" else 'asc'))
 
-    st.subheader("📦 Tabel Qty Sales")
+    st.subheader("📦 Qty Sales")
     sort_order_qs = st.selectbox("Urutkan Qty Sales berdasarkan:", ["Large to Small", "Small to Large"], key="qs_sort")
     df_qs = prepare_table('Qty Sales')
     st.write(sort_table(df_qs, order='desc' if sort_order_qs == "Large to Small" else 'asc'))
 
     st.markdown("---")
+    st.subheader("📚 Sheet Berdasarkan Filter")
+    tab1, tab2, tab3 = st.tabs(["Per Kategori Produk", "Per Marketplace", "Per Tahun"])
+
+    with tab1:
+        for kategori in sorted(filtered_df['Kategori Produk'].unique()):
+            st.markdown(f"### 🗂️ Kategori: {kategori}")
+            subset = filtered_df[filtered_df['Kategori Produk'] == kategori]
+            st.write("Market Share:")
+            st.dataframe(prepare_table("Market Share (%)", subset))
+            st.write("Volume Sales:")
+            st.dataframe(prepare_table("Volume Sales (IDR)", subset))
+            st.write("Qty Sales:")
+            st.dataframe(prepare_table("Qty Sales", subset))
+            st.markdown("---")
+
+    with tab2:
+        for mp in sorted(filtered_df['Marketplace'].unique()):
+            st.markdown(f"### 🛒 Marketplace: {mp}")
+            subset = filtered_df[filtered_df['Marketplace'] == mp]
+            st.write("Market Share:")
+            st.dataframe(prepare_table("Market Share (%)", subset))
+            st.write("Volume Sales:")
+            st.dataframe(prepare_table("Volume Sales (IDR)", subset))
+            st.write("Qty Sales:")
+            st.dataframe(prepare_table("Qty Sales", subset))
+            st.markdown("---")
+
+    with tab3:
+        for thn in sorted(filtered_df['Tahun'].unique()):
+            st.markdown(f"### 📅 Tahun: {thn}")
+            subset = filtered_df[filtered_df['Tahun'] == thn]
+            st.write("Market Share:")
+            st.dataframe(prepare_table("Market Share (%)", subset))
+            st.write("Volume Sales:")
+            st.dataframe(prepare_table("Volume Sales (IDR)", subset))
+            st.write("Qty Sales:")
+            st.dataframe(prepare_table("Qty Sales", subset))
+            st.markdown("---")
+
     st.caption("📌 Data simulasi - bukan data aktual. Untuk keperluan analisis market share retail e-commerce Indonesia seperti Shopee, Tokopedia, TikTok Shop, dll.")
 
 else:
