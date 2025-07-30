@@ -125,7 +125,7 @@ if df is not None and not df.empty:
 
             if not pivot.empty:
                 gb = GridOptionsBuilder.from_dataframe(pivot_display)
-                gb.configure_default_column(enableColumnResizing=True, wrapText=True, autoHeight=True)
+                gb.configure_default_column(enableColumnResizing=True, wrapText=False, autoHeight=False)
                 gb.configure_grid_options(domLayout='normal')
                 gb.configure_grid_options(frozenColumns=1)
                 grid_options = gb.build()
