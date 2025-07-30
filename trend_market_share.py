@@ -3,7 +3,6 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 import matplotlib.ticker as mtick
-from st_aggrid import AgGrid, GridOptionsBuilder
 
 # Set up layout
 st.set_page_config(page_title="Dashboard Trend Market Share Indonesia", layout="wide")
@@ -119,27 +118,7 @@ if df is not None and not df.empty:
             st.caption(f"Menampilkan {sort_topflop} berdasarkan kolom '{sort_column}' dalam mode '{sort_mode}'")
 
             if not pivot.empty:
-                pivot_display_clean = pivot_display.fillna("").astype(str)
-
-                gb = GridOptionsBuilder.from_dataframe(pivot_display_clean)
-                gb.configure_default_column(wrapText=False, resizable=True)
-
-                if 'Kategori Produk' in pivot_display_clean.columns:
-                    gb.configure_column("Kategori Produk", pinned='left', minWidth=200)
-
-                for col in pivot_display_clean.columns:
-                    gb.configure_column(col, minWidth=150, wrapText=False)
-
-                gb.configure_grid_options(domLayout='normal', suppressHorizontalScroll=False)
-                grid_options = gb.build()
-
-                AgGrid(
-                    pivot_display_clean,
-                    gridOptions=grid_options,
-                    fit_columns_on_grid_load=True,
-                    use_container_width=True,
-                    height=400
-                )
+                st.dataframe(pivot_display, use_container_width=True)
             else:
                 st.warning("Data kosong setelah filter diterapkan.")
 
