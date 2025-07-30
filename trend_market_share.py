@@ -59,14 +59,18 @@ if df is not None and not df.empty:
         df_2024_2025 = filtered_df[filtered_df['Tahun'].isin([2024, 2025])]
 
         for metric, label, is_percent, is_currency in [
-            ('Market Share (%)', 'Market Share', True, False),
-            ('Volume Sales (IDR)', 'Volume Sales', False, True),
+            ('Market Share (%)', 'Market Share (%)', True, False),
+            ('Volume Sales (IDR)', 'Volume Sales (IDR)', False, True),
             ('Qty Sales', 'Qty Sales', False, False)
         ]:
             grouped = df_2024_2025.groupby(['Kategori Produk', 'Tahun'])[metric].sum().reset_index()
             pivot = grouped.pivot(index='Kategori Produk', columns='Tahun', values=metric).reset_index()
             pivot['Gap'] = pivot[2025] - pivot[2024]
             pivot['Growth'] = ((pivot[2025] - pivot[2024]) / pivot[2024]) * 100
+
+            # Tambahkan kolom total untuk sorting
+            pivot['Total'] = pivot[2024] + pivot[2025]
+            pivot = pivot.sort_values(by='Total', ascending=False).drop(columns=['Total'])
 
             if is_percent:
                 for year in [2024, 2025]:
