@@ -49,6 +49,10 @@ if df is not None and not df.empty:
         selected_tahun = st.multiselect("Pilih Tahun", options=sorted(df['Tahun'].unique()), default=sorted(df['Tahun'].unique()))
         selected_kategori = st.multiselect("Pilih Kategori Produk", options=df['Kategori Produk'].unique(), default=df['Kategori Produk'].unique())
 
+        st.markdown("---")
+        sort_order = st.radio("Urutkan berdasarkan total 2024 + 2025", ["Largest to Smallest", "Smallest to Largest"], index=0)
+        ascending_sort = sort_order == "Smallest to Largest"
+
     filtered_df = df[(df['Marketplace'].isin(selected_marketplace)) & 
                      (df['Tahun'].isin(selected_tahun)) & 
                      (df['Kategori Produk'].isin(selected_kategori))]
@@ -68,9 +72,8 @@ if df is not None and not df.empty:
             pivot['Gap'] = pivot[2025] - pivot[2024]
             pivot['Growth'] = ((pivot[2025] - pivot[2024]) / pivot[2024]) * 100
 
-            # Simpan nilai numerik asli untuk keperluan sorting
             pivot['Total'] = pivot[2024] + pivot[2025]
-            pivot = pivot.sort_values(by='Total', ascending=False)
+            pivot = pivot.sort_values(by='Total', ascending=ascending_sort)
 
             if is_percent:
                 for year in [2024, 2025]:
