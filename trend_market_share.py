@@ -41,7 +41,7 @@ if df is not None and not df.empty:
     # Sidebar filters
     with st.sidebar:
         st.header("📌 Navigasi Data Berdasarkan:")
-        sheet_tab = st.radio("Pilih Tampilan:", ["Tabel Gabungan"])
+        sheet_tab = st.radio("Pilih Tampilan:", ["Tabel Gabungan", "Per Kategori Produk", "Per Marketplace", "Per Tahun"])
 
         st.markdown("---")
         st.header("🔍 Filter Data")
@@ -55,44 +55,53 @@ if df is not None and not df.empty:
 
     st.title("📊 Dashboard Trend Market Share Indonesia - Retail/FMCG")
 
-    df_2024_2025 = filtered_df[filtered_df['Tahun'].isin([2024, 2025])]
+    if sheet_tab == "Tabel Gabungan":
+        df_2024_2025 = filtered_df[filtered_df['Tahun'].isin([2024, 2025])]
 
-    combined_df = df_2024_2025.groupby(['Kategori Produk', 'Tahun']).agg({
-        'Qty Sales': 'sum',
-        'Volume Sales (IDR)': 'sum',
-        'Market Share (%)': 'mean'
-    }).reset_index()
+        combined_df = df_2024_2025.groupby(['Kategori Produk', 'Tahun']).agg({
+            'Qty Sales': 'sum',
+            'Volume Sales (IDR)': 'sum',
+            'Market Share (%)': 'mean'
+        }).reset_index()
 
-    pivot_combined = combined_df.pivot(index='Kategori Produk', columns='Tahun')
+        pivot_combined = combined_df.pivot(index='Kategori Produk', columns='Tahun')
+        pivot_combined.columns = [f"{col[1]} {col[0]}" for col in pivot_combined.columns]
+        pivot_combined.reset_index(inplace=True)
 
-    # Flatten multiindex columns
-    pivot_combined.columns = [f"{col[1]} {col[0]}" for col in pivot_combined.columns]
-    pivot_combined.reset_index(inplace=True)
+        for metric in ['Qty Sales', 'Volume Sales (IDR)', 'Market Share (%)']:
+            if f"2024 {metric}" in pivot_combined.columns and f"2025 {metric}" in pivot_combined.columns:
+                pivot_combined[f"Gap {metric}"] = pivot_combined[f"2025 {metric}"] - pivot_combined[f"2024 {metric}"]
+                pivot_combined[f"Growth {metric}"] = ((pivot_combined[f"2025 {metric}"] - pivot_combined[f"2024 {metric}"]) / pivot_combined[f"2024 {metric}"]) * 100
 
-    # Calculate Growth and Gap for each metric
-    for metric in ['Qty Sales', 'Volume Sales (IDR)', 'Market Share (%)']:
-        if f"2024 {metric}" in pivot_combined.columns and f"2025 {metric}" in pivot_combined.columns:
-            pivot_combined[f"Gap {metric}"] = pivot_combined[f"2025 {metric}"] - pivot_combined[f"2024 {metric}"]
-            pivot_combined[f"Growth {metric}"] = ((pivot_combined[f"2025 {metric}"] - pivot_combined[f"2024 {metric}"]) / pivot_combined[f"2024 {metric}"]) * 100
-
-    # Format columns
-    for col in pivot_combined.columns:
-        if 'Volume Sales' in col:
-            pivot_combined[col] = pivot_combined[col].apply(lambda x: f"Rp{x:,.0f}" if pd.notnull(x) else '-')
-        elif 'Qty Sales' in col:
-            pivot_combined[col] = pivot_combined[col].apply(lambda x: f"{x:,.0f}" if pd.notnull(x) else '-')
-        elif 'Market Share' in col:
-            pivot_combined[col] = pivot_combined[col].apply(lambda x: f"{x:.2f}%" if pd.notnull(x) else '-')
-        elif 'Growth' in col or 'Gap' in col:
-            if 'Market Share' in col:
-                pivot_combined[col] = pivot_combined[col].apply(lambda x: f"{x:.2f}%" if pd.notnull(x) else '-')
-            elif 'Volume Sales' in col:
-                pivot_combined[col] = pivot_combined[col].apply(lambda x: f"Rp{x:,.0f}" if pd.notnull(x) else '-')
+        for col in pivot_combined.columns:
+            if 'Volume Sales' in col:
+                pivot_combined[col] = pivot_combined[col].apply(lambda x: f"Rp{x:,.0f}" if pd.notnull(x) and isinstance(x, (int, float)) else x)
             elif 'Qty Sales' in col:
-                pivot_combined[col] = pivot_combined[col].apply(lambda x: f"{x:,.0f}" if pd.notnull(x) else '-')
+                pivot_combined[col] = pivot_combined[col].apply(lambda x: f"{x:,.0f}" if pd.notnull(x) and isinstance(x, (int, float)) else x)
+            elif 'Market Share' in col:
+                pivot_combined[col] = pivot_combined[col].apply(lambda x: f"{x:.2f}%" if pd.notnull(x) and isinstance(x, (int, float)) else x)
+            elif 'Growth' in col or 'Gap' in col:
+                if 'Market Share' in col:
+                    pivot_combined[col] = pivot_combined[col].apply(lambda x: f"{x:.2f}%" if pd.notnull(x) and isinstance(x, (int, float)) else x)
+                elif 'Volume Sales' in col:
+                    pivot_combined[col] = pivot_combined[col].apply(lambda x: f"Rp{x:,.0f}" if pd.notnull(x) and isinstance(x, (int, float)) else x)
+                elif 'Qty Sales' in col:
+                    pivot_combined[col] = pivot_combined[col].apply(lambda x: f"{x:,.0f}" if pd.notnull(x) and isinstance(x, (int, float)) else x)
 
-    st.subheader("📋 Tabel Gabungan Qty, Volume, Market Share per Kategori Produk")
-    st.dataframe(pivot_combined, use_container_width=True)
+        st.subheader("📋 Tabel Gabungan Qty, Volume, Market Share per Kategori Produk")
+        st.dataframe(pivot_combined, use_container_width=True)
+
+    elif sheet_tab == "Per Kategori Produk":
+        st.subheader("📌 Data per Kategori Produk")
+        st.dataframe(filtered_df.sort_values(by="Kategori Produk"), use_container_width=True)
+
+    elif sheet_tab == "Per Marketplace":
+        st.subheader("📌 Data per Marketplace")
+        st.dataframe(filtered_df.sort_values(by="Marketplace"), use_container_width=True)
+
+    elif sheet_tab == "Per Tahun":
+        st.subheader("📌 Data per Tahun")
+        st.dataframe(filtered_df.sort_values(by="Tahun"), use_container_width=True)
 
     st.caption("📌 Data simulasi - bukan data aktual. Untuk keperluan analisis market share retail e-commerce Indonesia seperti Shopee, Tokopedia, TikTok Shop, dll.")
 
