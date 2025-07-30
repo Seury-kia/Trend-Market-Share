@@ -86,9 +86,9 @@ if df is not None and not df.empty:
             pivot_df['2025'] = pivot_df['2025'].apply(lambda x: f"{x:,.0f}")
             pivot_df['Gap'] = pivot_df['Gap'].apply(lambda x: f"{x:,.0f}")
         elif metric == 'Market Share (%)':
-            pivot_df['2024'] = pivot_df['2024'].round(2)
-            pivot_df['2025'] = pivot_df['2025'].round(2)
-            pivot_df['Gap'] = pivot_df['Gap'].round(2)
+            pivot_df['2024'] = pivot_df['2024'].round(2).astype(str) + '%'
+            pivot_df['2025'] = pivot_df['2025'].round(2).astype(str) + '%'
+            pivot_df['Gap'] = pivot_df['Gap'].round(2).astype(str) + '%'
 
         pivot_df['Growth_raw'] = pivot_df['Growth (%)']
         pivot_df['Growth (%)'] = pivot_df['Growth (%)'].round(2).astype(str) + '%'
@@ -105,7 +105,10 @@ if df is not None and not df.empty:
 
     def style_gap(val):
         try:
-            val_num = float(str(val).replace('Rp', '').replace(',', '').replace('.', ''))
+            if isinstance(val, str) and '%' in val:
+                val_num = float(val.replace('%', ''))
+            else:
+                val_num = float(str(val).replace('Rp', '').replace(',', '').replace('.', ''))
             color = 'green' if val_num > 0 else 'red'
             return f'color: {color}'
         except:
@@ -113,7 +116,7 @@ if df is not None and not df.empty:
 
     def sort_table(df, order='desc', metric='Volume Sales (IDR)'):
         if metric == 'Market Share (%)':
-            sort_col = str(sort_by_year)
+            sort_col = str(sort_by_year).replace('%', '')
         else:
             sort_col = f"{sort_by_year}_raw"
 
