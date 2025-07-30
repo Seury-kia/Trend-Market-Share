@@ -80,20 +80,20 @@ if df is not None and not df.empty:
             pivot['Gap'] = pivot[2025] - pivot[2024]
             pivot['Growth'] = ((pivot[2025] - pivot[2024]) / pivot[2024]) * 100
 
-            col1, col2, col3 = st.columns([3, 2, 1])
+            col1, col2, col3, col4 = st.columns([3, 2, 1, 1])
             with col1:
                 sort_column = st.selectbox(f"Urutkan {label} berdasarkan:", options=[2024, 2025, 'Gap', 'Growth'], key=label)
             with col2:
                 sort_mode = st.radio(f"Urutan Data", ["Largest", "Smallest"], horizontal=True, key=label+"_mode")
             with col3:
-                sort_topflop = st.radio(f"", ["Top 10", "Flop 10"], horizontal=True, key=label+"_order")
+                sort_topflop = st.radio(f"", ["All", "Top", "Flop"], horizontal=True, key=label+"_order")
 
             ascending_mode = sort_mode == "Smallest"
             pivot = pivot.sort_values(by=sort_column, ascending=ascending_mode)
 
-            if sort_topflop == "Top 10":
+            if sort_topflop == "Top":
                 pivot = pivot.head(10)
-            elif sort_topflop == "Flop 10":
+            elif sort_topflop == "Flop":
                 pivot = pivot.tail(10)
 
             if is_percent:
