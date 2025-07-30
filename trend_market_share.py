@@ -3,6 +3,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 import matplotlib.ticker as mtick
+from st_aggrid import AgGrid, GridOptionsBuilder
 
 # Set up layout
 st.set_page_config(page_title="Dashboard Trend Market Share Indonesia", layout="wide")
@@ -40,11 +41,11 @@ df = load_data()
 if df is not None and not df.empty:
     # Sidebar filters
     with st.sidebar:
-        st.header("📌 Navigasi Data Berdasarkan:")
+        st.header("\U0001F4CC Navigasi Data Berdasarkan:")
         sheet_tab = st.radio("Pilih Tampilan:", ["Performance Detail", "Per Kategori Produk", "Per Marketplace", "Per Tahun"])
 
         st.markdown("---")
-        st.header("🔍 Filter Data")
+        st.header("\U0001F50D Filter Data")
 
         marketplace_list = df['Marketplace'].unique().tolist()
         tahun_list = sorted(df['Tahun'].unique().tolist())
@@ -65,7 +66,7 @@ if df is not None and not df.empty:
                      (df['Tahun'].isin(selected_tahun)) & 
                      (df['Kategori Produk'].isin(selected_kategori))]
 
-    st.title("📊 Dashboard Trend Market Share Indonesia - Retail/FMCG")
+    st.title("\U0001F4CA Dashboard Trend Market Share Indonesia - Retail/FMCG")
 
     if sheet_tab == "Performance Detail":
         df_2024_2025 = filtered_df[filtered_df['Tahun'].isin([2024, 2025])]
@@ -101,7 +102,6 @@ if df is not None and not df.empty:
             elif sort_topflop == "Flop":
                 pivot = pivot.tail(10)
 
-            # Salin untuk tampilan, tetap jaga tipe data numerik
             pivot_display = pivot.copy()
 
             if is_percent:
@@ -120,27 +120,32 @@ if df is not None and not df.empty:
                 pivot_display['Gap'] = pivot_display['Gap'].apply(lambda x: f"{x:,.0f}")
                 pivot_display['Growth'] = pivot_display['Growth'].apply(lambda x: f"{x:.2f}%")
 
-            st.subheader(f"📋 {label} per Kategori Produk")
+            st.subheader(f"\U0001F4CB {label} per Kategori Produk")
             st.caption(f"Menampilkan {sort_topflop} berdasarkan kolom '{sort_column}' dalam mode '{sort_mode}'")
 
             if not pivot.empty:
-                st.dataframe(pivot_display, use_container_width=True)
+                gb = GridOptionsBuilder.from_dataframe(pivot_display)
+                gb.configure_default_column(enableColumnResizing=True, wrapText=True, autoHeight=True)
+                gb.configure_grid_options(domLayout='normal')
+                gb.configure_grid_options(frozenColumns=1)
+                grid_options = gb.build()
+                AgGrid(pivot_display, gridOptions=grid_options, enable_enterprise_modules=False, fit_columns_on_grid_load=True, use_container_width=True)
             else:
                 st.warning("Data kosong setelah filter diterapkan.")
 
     elif sheet_tab == "Per Kategori Produk":
-        st.subheader("📌 Data per Kategori Produk")
+        st.subheader("\U0001F4CC Data per Kategori Produk")
         st.dataframe(filtered_df.sort_values(by="Kategori Produk"), use_container_width=True)
 
     elif sheet_tab == "Per Marketplace":
-        st.subheader("📌 Data per Marketplace")
+        st.subheader("\U0001F4CC Data per Marketplace")
         st.dataframe(filtered_df.sort_values(by="Marketplace"), use_container_width=True)
 
     elif sheet_tab == "Per Tahun":
-        st.subheader("📌 Data per Tahun")
+        st.subheader("\U0001F4CC Data per Tahun")
         st.dataframe(filtered_df.sort_values(by="Tahun"), use_container_width=True)
 
-    st.caption("📌 Data simulasi - bukan data aktual. Untuk keperluan analisis market share retail e-commerce Indonesia seperti Shopee, Tokopedia, TikTok Shop, dll.")
+    st.caption("\U0001F4CC Data simulasi - bukan data aktual. Untuk keperluan analisis market share retail e-commerce Indonesia seperti Shopee, Tokopedia, TikTok Shop, dll.")
 
 else:
     st.warning("Data tidak berhasil dimuat atau kosong. Periksa kembali format Google Sheet.")
