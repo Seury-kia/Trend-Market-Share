@@ -47,36 +47,53 @@ if df is not None and not df.empty:
                      (df['Tahun'].isin(selected_tahun)) & 
                      (df['Kategori Produk'].isin(selected_kategori))]
 
-    # Title
     st.title("📊 Dashboard Trend Market Share Indonesia - Retail/FMCG")
 
-    # 1. Tabel Detail Market Share per Kategori Tahun 2024 & 2025
-    st.subheader("📊 Tabel Data per Kategori - Horizontal Tahun")
     df_2024_2025 = filtered_df[filtered_df['Tahun'].isin([2024, 2025])]
-    if not df_2024_2025.empty:
+
+    def prepare_table(metric):
         pivot_df = df_2024_2025.pivot_table(
             index='Kategori Produk', 
             columns='Tahun', 
-            values=['Market Share (%)', 'Penjualan (IDR)', 'Volume Unit'], 
-            aggfunc={'Market Share (%)': 'mean', 'Penjualan (IDR)': 'sum', 'Volume Unit': 'sum'}
-        )
+            values=metric, 
+            aggfunc='sum' if metric != 'Market Share (%)' else 'mean'
+        ).reset_index()
 
-        pivot_df.columns = [f"{metric} {year}" for metric, year in pivot_df.columns]
-        pivot_df = pivot_df.reset_index()
+        if 2024 in pivot_df.columns and 2025 in pivot_df.columns:
+            pivot_df['Growth (%)'] = ((pivot_df[2025] - pivot_df[2024]) / pivot_df[2024]) * 100
+            pivot_df['Gap'] = pivot_df[2025] - pivot_df[2024]
 
-        # Format angka
-        for col in pivot_df.columns:
-            if 'Penjualan (IDR)' in col:
-                pivot_df[col] = pivot_df[col].apply(lambda x: f"Rp{x:,.0f}")
-            elif 'Volume Unit' in col:
-                pivot_df[col] = pivot_df[col].apply(lambda x: f"{x:,.0f}")
-            elif 'Market Share (%)' in col:
-                pivot_df[col] = pivot_df[col].round(2)
+        # Rename columns
+        pivot_df.rename(columns={2024: '2024', 2025: '2025'}, inplace=True)
 
-        st.dataframe(pivot_df, use_container_width=True)
+        if metric == 'Penjualan (IDR)':
+            pivot_df['2024'] = pivot_df['2024'].apply(lambda x: f"Rp{x:,.0f}")
+            pivot_df['2025'] = pivot_df['2025'].apply(lambda x: f"Rp{x:,.0f}")
+            pivot_df['Gap'] = pivot_df['Gap'].apply(lambda x: f"Rp{x:,.0f}")
+        elif metric == 'Volume Unit':
+            pivot_df['2024'] = pivot_df['2024'].apply(lambda x: f"{x:,.0f}")
+            pivot_df['2025'] = pivot_df['2025'].apply(lambda x: f"{x:,.0f}")
+            pivot_df['Gap'] = pivot_df['Gap'].apply(lambda x: f"{x:,.0f}")
+        elif metric == 'Market Share (%)':
+            pivot_df['2024'] = pivot_df['2024'].round(2)
+            pivot_df['2025'] = pivot_df['2025'].round(2)
+            pivot_df['Gap'] = pivot_df['Gap'].round(2)
 
-    # Footer
+        pivot_df['Growth (%)'] = pivot_df['Growth (%)'].round(2)
+
+        return pivot_df
+
+    st.subheader("📈 Tabel Market Share (%)")
+    st.dataframe(prepare_table('Market Share (%)'), use_container_width=True)
+
+    st.subheader("💰 Tabel Penjualan (IDR)")
+    st.dataframe(prepare_table('Penjualan (IDR)'), use_container_width=True)
+
+    st.subheader("📦 Tabel Volume Unit")
+    st.dataframe(prepare_table('Volume Unit'), use_container_width=True)
+
     st.markdown("---")
     st.caption("📌 Data simulasi - bukan data aktual. Untuk keperluan analisis market share retail e-commerce Indonesia seperti Shopee, Tokopedia, TikTok Shop, dll.")
+
 else:
     st.warning("Data tidak berhasil dimuat atau kosong. Periksa kembali format Google Sheet.")
