@@ -44,6 +44,14 @@ if df is not None and not df.empty:
         sheet_tab = st.radio("Pilih Tampilan:", ["Performance Detail", "Per Kategori Produk", "Per Marketplace", "Per Tahun"])
 
         st.markdown("---")
+        st.header("\U0001F4DD Pilih Jenis Data")
+        selected_metrics = st.multiselect(
+            "Tampilkan metrik:",
+            options=["Market Share (%)", "Volume Sales (IDR)", "Qty Sales"],
+            default=["Market Share (%)"]
+        )
+
+        st.markdown("---")
         st.header("\U0001F50D Filter Data")
 
         marketplace_list = df['Marketplace'].unique().tolist()
@@ -60,14 +68,6 @@ if df is not None and not df.empty:
             selected_tahun = tahun_list
         if 'All' in selected_kategori:
             selected_kategori = kategori_list
-
-        st.markdown("---")
-        st.header("\U0001F4DD Pilih Jenis Data")
-        selected_metrics = st.multiselect(
-            "Tampilkan metrik:",
-            options=["Market Share (%)", "Volume Sales (IDR)", "Qty Sales"],
-            default=["Market Share (%)"]
-        )
 
     filtered_df = df[(df['Marketplace'].isin(selected_marketplace)) & 
                      (df['Tahun'].isin(selected_tahun)) & 
