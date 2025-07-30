@@ -104,21 +104,16 @@ if df is not None and not df.empty:
 
             pivot_display = pivot.copy()
 
-            if is_percent:
-                for year in [2024, 2025]:
-                    pivot_display[year] = pivot_display[year].apply(lambda x: f"{x:.2f}%")
-                pivot_display['Gap'] = pivot_display['Gap'].apply(lambda x: f"{x:.2f}%")
-                pivot_display['Growth'] = pivot_display['Growth'].apply(lambda x: f"{x:.2f}%")
-            elif is_currency:
-                for year in [2024, 2025]:
-                    pivot_display[year] = pivot_display[year].apply(lambda x: f"Rp{x:,.0f}")
-                pivot_display['Gap'] = pivot_display['Gap'].apply(lambda x: f"Rp{x:,.0f}")
-                pivot_display['Growth'] = pivot_display['Growth'].apply(lambda x: f"{x:.2f}%")
-            else:
-                for year in [2024, 2025]:
-                    pivot_display[year] = pivot_display[year].apply(lambda x: f"{x:,.0f}")
-                pivot_display['Gap'] = pivot_display['Gap'].apply(lambda x: f"{x:,.0f}")
-                pivot_display['Growth'] = pivot_display['Growth'].apply(lambda x: f"{x:.2f}%")
+            for col in pivot_display.columns:
+                if pivot_display[col].dtype in ['float64', 'int64']:
+                    if is_percent and col in [2024, 2025, 'Gap', 'Growth']:
+                        pivot_display[col] = pivot_display[col].apply(lambda x: f"{x:.2f}%")
+                    elif is_currency and col in [2024, 2025, 'Gap']:
+                        pivot_display[col] = pivot_display[col].apply(lambda x: f"Rp{x:,.0f}")
+                    elif col == 'Growth':
+                        pivot_display[col] = pivot_display[col].apply(lambda x: f"{x:.2f}%")
+                    else:
+                        pivot_display[col] = pivot_display[col].apply(lambda x: f"{x:,.0f}")
 
             st.subheader(f"\U0001F4CB {label} per Kategori Produk")
             st.caption(f"Menampilkan {sort_topflop} berdasarkan kolom '{sort_column}' dalam mode '{sort_mode}'")
@@ -128,8 +123,8 @@ if df is not None and not df.empty:
                 gb.configure_default_column(enableColumnResizing=True, wrapText=False, autoHeight=False, resizable=True)
                 gb.configure_column("Kategori Produk", pinned='left', minWidth=200)
                 for col in pivot_display.columns:
-                    gb.configure_column(col, wrapText=False, minWidth=120)
-                gb.configure_grid_options(domLayout='normal')
+                    gb.configure_column(col, wrapText=False, minWidth=150)
+                gb.configure_grid_options(domLayout='normal', suppressHorizontalScroll=False)
                 grid_options = gb.build()
                 AgGrid(
                     pivot_display,
