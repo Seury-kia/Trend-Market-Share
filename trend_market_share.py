@@ -77,8 +77,10 @@ if df is not None and not df.empty:
         ]:
             grouped = df_2024_2025.groupby(['Kategori Produk', 'Tahun'])[metric].sum().reset_index()
             pivot = grouped.pivot(index='Kategori Produk', columns='Tahun', values=metric).reset_index()
-            pivot['Gap'] = pivot[2025] - pivot[2024]
-            pivot['Growth'] = ((pivot[2025] - pivot[2024]) / pivot[2024]) * 100
+
+            pivot['Gap'] = pivot.get(2025, 0) - pivot.get(2024, 0)
+            pivot['Growth'] = ((pivot.get(2025, 0) - pivot.get(2024, 0)) / pivot.get(2024, 1)) * 100
+            pivot[['Gap', 'Growth']] = pivot[['Gap', 'Growth']].fillna(0)
 
             col1, col2, col3, col4 = st.columns([3, 2, 1, 1])
             with col1:
@@ -89,7 +91,10 @@ if df is not None and not df.empty:
                 sort_topflop = st.radio(f"", ["All", "Top", "Flop"], horizontal=True, key=label+"_order")
 
             ascending_mode = sort_mode == "Smallest"
-            pivot = pivot.sort_values(by=sort_column, ascending=ascending_mode)
+            if sort_column in pivot.columns:
+                pivot = pivot.sort_values(by=sort_column, ascending=ascending_mode)
+            else:
+                st.warning(f"Kolom '{sort_column}' tidak tersedia dalam data.")
 
             if sort_topflop == "Top":
                 pivot = pivot.head(10)
