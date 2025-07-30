@@ -41,17 +41,22 @@ if df is not None and not df.empty:
     st.sidebar.header("Filter Data")
     selected_marketplace = st.sidebar.multiselect("Pilih Marketplace", options=df['Marketplace'].unique(), default=df['Marketplace'].unique())
     selected_tahun = st.sidebar.multiselect("Pilih Tahun", options=sorted(df['Tahun'].unique()), default=sorted(df['Tahun'].unique()))
+    selected_kategori = st.sidebar.multiselect("Pilih Kategori Produk", options=df['Kategori Produk'].unique(), default=df['Kategori Produk'].unique())
 
-    filtered_df = df[(df['Marketplace'].isin(selected_marketplace)) & (df['Tahun'].isin(selected_tahun))]
+    filtered_df = df[(df['Marketplace'].isin(selected_marketplace)) & 
+                     (df['Tahun'].isin(selected_tahun)) & 
+                     (df['Kategori Produk'].isin(selected_kategori))]
 
     # Title
     st.title("📊 Dashboard Trend Market Share Indonesia - Retail/FMCG")
 
     # 1. Tren Market Share per Kategori
     st.subheader("Trend Market Share (%) per Kategori Produk")
-    fig1, ax1 = plt.subplots(figsize=(12, 5))
+    fig1, ax1 = plt.subplots(figsize=(14, 6))
     sns.lineplot(data=filtered_df, x="Tahun", y="Market Share (%)", hue="Kategori Produk", marker="o", style="Marketplace", ax=ax1)
     ax1.set_ylabel("Market Share (%)")
+    ax1.legend(bbox_to_anchor=(1.05, 1), loc='upper left', title="Kategori Produk")
+    plt.tight_layout()
     st.pyplot(fig1)
 
     # 2. Kontribusi Kategori per Marketplace
