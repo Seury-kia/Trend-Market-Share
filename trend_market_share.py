@@ -41,7 +41,7 @@ if df is not None and not df.empty:
     # Sidebar filters
     with st.sidebar:
         st.header("📌 Navigasi Data Berdasarkan:")
-        sheet_tab = st.radio("Pilih Tampilan:", ["Tabel Gabungan", "Per Kategori Produk", "Per Marketplace", "Per Tahun"])
+        sheet_tab = st.radio("Pilih Tampilan:", ["Performance Detail", "Per Kategori Produk", "Per Marketplace", "Per Tahun"])
 
         st.markdown("---")
         st.header("🔍 Filter Data")
@@ -55,41 +55,37 @@ if df is not None and not df.empty:
 
     st.title("📊 Dashboard Trend Market Share Indonesia - Retail/FMCG")
 
-    if sheet_tab == "Tabel Gabungan":
+    if sheet_tab == "Performance Detail":
         df_2024_2025 = filtered_df[filtered_df['Tahun'].isin([2024, 2025])]
 
-        combined_df = df_2024_2025.groupby(['Kategori Produk', 'Tahun']).agg({
-            'Qty Sales': 'sum',
-            'Volume Sales (IDR)': 'sum',
-            'Market Share (%)': 'mean'
-        }).reset_index()
+        for metric, label, is_percent, is_currency in [
+            ('Market Share (%)', 'Market Share', True, False),
+            ('Volume Sales (IDR)', 'Volume Sales', False, True),
+            ('Qty Sales', 'Qty Sales', False, False)
+        ]:
+            grouped = df_2024_2025.groupby(['Kategori Produk', 'Tahun'])[metric].sum().reset_index()
+            pivot = grouped.pivot(index='Kategori Produk', columns='Tahun', values=metric).reset_index()
+            pivot['Gap'] = pivot[2025] - pivot[2024]
+            pivot['Growth'] = ((pivot[2025] - pivot[2024]) / pivot[2024]) * 100
 
-        pivot_combined = combined_df.pivot(index='Kategori Produk', columns='Tahun')
-        pivot_combined.columns = [f"{col[1]} {col[0]}" for col in pivot_combined.columns]
-        pivot_combined.reset_index(inplace=True)
+            if is_percent:
+                for year in [2024, 2025]:
+                    pivot[year] = pivot[year].apply(lambda x: f"{x:.2f}%")
+                pivot['Gap'] = pivot['Gap'].apply(lambda x: f"{x:.2f}%")
+                pivot['Growth'] = pivot['Growth'].apply(lambda x: f"{x:.2f}%")
+            elif is_currency:
+                for year in [2024, 2025]:
+                    pivot[year] = pivot[year].apply(lambda x: f"Rp{x:,.0f}")
+                pivot['Gap'] = pivot['Gap'].apply(lambda x: f"Rp{x:,.0f}")
+                pivot['Growth'] = pivot['Growth'].apply(lambda x: f"{x:.2f}%")
+            else:
+                for year in [2024, 2025]:
+                    pivot[year] = pivot[year].apply(lambda x: f"{x:,.0f}")
+                pivot['Gap'] = pivot['Gap'].apply(lambda x: f"{x:,.0f}")
+                pivot['Growth'] = pivot['Growth'].apply(lambda x: f"{x:.2f}%")
 
-        for metric in ['Qty Sales', 'Volume Sales (IDR)', 'Market Share (%)']:
-            if f"2024 {metric}" in pivot_combined.columns and f"2025 {metric}" in pivot_combined.columns:
-                pivot_combined[f"Gap {metric}"] = pivot_combined[f"2025 {metric}"] - pivot_combined[f"2024 {metric}"]
-                pivot_combined[f"Growth {metric}"] = ((pivot_combined[f"2025 {metric}"] - pivot_combined[f"2024 {metric}"]) / pivot_combined[f"2024 {metric}"]) * 100
-
-        for col in pivot_combined.columns:
-            if 'Volume Sales' in col:
-                pivot_combined[col] = pivot_combined[col].apply(lambda x: f"Rp{x:,.0f}" if pd.notnull(x) and isinstance(x, (int, float)) else x)
-            elif 'Qty Sales' in col:
-                pivot_combined[col] = pivot_combined[col].apply(lambda x: f"{x:,.0f}" if pd.notnull(x) and isinstance(x, (int, float)) else x)
-            elif 'Market Share' in col:
-                pivot_combined[col] = pivot_combined[col].apply(lambda x: f"{x:.2f}%" if pd.notnull(x) and isinstance(x, (int, float)) else x)
-            elif 'Growth' in col or 'Gap' in col:
-                if 'Market Share' in col:
-                    pivot_combined[col] = pivot_combined[col].apply(lambda x: f"{x:.2f}%" if pd.notnull(x) and isinstance(x, (int, float)) else x)
-                elif 'Volume Sales' in col:
-                    pivot_combined[col] = pivot_combined[col].apply(lambda x: f"Rp{x:,.0f}" if pd.notnull(x) and isinstance(x, (int, float)) else x)
-                elif 'Qty Sales' in col:
-                    pivot_combined[col] = pivot_combined[col].apply(lambda x: f"{x:,.0f}" if pd.notnull(x) and isinstance(x, (int, float)) else x)
-
-        st.subheader("📋 Tabel Gabungan Qty, Volume, Market Share per Kategori Produk")
-        st.dataframe(pivot_combined, use_container_width=True)
+            st.subheader(f"📋 {label} per Kategori Produk")
+            st.dataframe(pivot, use_container_width=True)
 
     elif sheet_tab == "Per Kategori Produk":
         st.subheader("📌 Data per Kategori Produk")
