@@ -23,11 +23,12 @@ def load_data():
         st.error("Kolom 'Market Share ( % )' atau 'Market Share (%)' tidak ditemukan di data.")
 
     if 'Penjualan ( IDR )' in df.columns:
-        df['Penjualan (IDR)'] = df['Penjualan ( IDR )'].str.replace(',', '').astype(float)
+        df['Volume Sales (IDR)'] = df['Penjualan ( IDR )'].str.replace(',', '').astype(float)
         df.drop(columns=['Penjualan ( IDR )'], inplace=True)
 
     if 'Volume Unit' in df.columns:
-        df['Volume Unit'] = df['Volume Unit'].str.replace(',', '').astype(float)
+        df['Qty Sales'] = df['Volume Unit'].str.replace(',', '').astype(float)
+        df.drop(columns=['Volume Unit'], inplace=True)
 
     if 'Tahun' in df.columns:
         df['Tahun'] = df['Tahun'].astype(int)
@@ -66,11 +67,11 @@ if df is not None and not df.empty:
         # Rename columns
         pivot_df.rename(columns={2024: '2024', 2025: '2025'}, inplace=True)
 
-        if metric == 'Penjualan (IDR)':
+        if metric == 'Volume Sales (IDR)':
             pivot_df['2024'] = pivot_df['2024'].apply(lambda x: f"Rp{x:,.0f}")
             pivot_df['2025'] = pivot_df['2025'].apply(lambda x: f"Rp{x:,.0f}")
             pivot_df['Gap'] = pivot_df['Gap'].apply(lambda x: f"Rp{x:,.0f}")
-        elif metric == 'Volume Unit':
+        elif metric == 'Qty Sales':
             pivot_df['2024'] = pivot_df['2024'].apply(lambda x: f"{x:,.0f}")
             pivot_df['2025'] = pivot_df['2025'].apply(lambda x: f"{x:,.0f}")
             pivot_df['Gap'] = pivot_df['Gap'].apply(lambda x: f"{x:,.0f}")
@@ -86,11 +87,11 @@ if df is not None and not df.empty:
     st.subheader("📈 Tabel Market Share (%)")
     st.dataframe(prepare_table('Market Share (%)'), use_container_width=True)
 
-    st.subheader("💰 Tabel Penjualan (IDR)")
-    st.dataframe(prepare_table('Penjualan (IDR)'), use_container_width=True)
+    st.subheader("💰 Tabel Volume Sales (IDR)")
+    st.dataframe(prepare_table('Volume Sales (IDR)'), use_container_width=True)
 
-    st.subheader("📦 Tabel Volume Unit")
-    st.dataframe(prepare_table('Volume Unit'), use_container_width=True)
+    st.subheader("📦 Tabel Qty Sales")
+    st.dataframe(prepare_table('Qty Sales'), use_container_width=True)
 
     st.markdown("---")
     st.caption("📌 Data simulasi - bukan data aktual. Untuk keperluan analisis market share retail e-commerce Indonesia seperti Shopee, Tokopedia, TikTok Shop, dll.")
