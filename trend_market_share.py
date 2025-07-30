@@ -74,12 +74,35 @@ if df is not None and not df.empty:
     penjualan_grouped['Penjualan (IDR)'] = penjualan_grouped['Penjualan (IDR)'].apply(lambda x: f"Rp{x:,.0f}")
     st.dataframe(penjualan_grouped, use_container_width=True)
 
-    # 3. Gap Market Share Year-over-Year
+    # 3. Batang: Market Share per Tahun dan Kategori + Line Contribution + Growth
+    st.subheader("📊 Market Share per Kategori - Tahun 2024 & 2025")
+    df_2024_2025 = filtered_df[filtered_df['Tahun'].isin([2024, 2025])]
+    if not df_2024_2025.empty:
+        pivot_df = df_2024_2025.pivot_table(index='Kategori Produk', columns='Tahun', values='Market Share (%)', aggfunc='mean').fillna(0)
+        pivot_df['Growth (%)'] = ((pivot_df[2025] - pivot_df[2024]) / pivot_df[2024]) * 100
+        pivot_df = pivot_df.sort_values(by=2025, ascending=False)
+
+        fig_bar, ax_bar = plt.subplots(figsize=(14, 7))
+        pivot_df[[2024, 2025]].plot(kind='bar', ax=ax_bar)
+        ax_bar.set_ylabel("Market Share (%)")
+        ax_bar.yaxis.set_major_formatter(mtick.PercentFormatter())
+        ax_bar.set_title("Market Share per Kategori Tahun 2024 & 2025")
+        ax_bar.legend(title="Tahun")
+        for container in ax_bar.containers:
+            ax_bar.bar_label(container, fmt='%.2f', label_type='edge')
+        plt.xticks(rotation=45, ha='right')
+        plt.tight_layout()
+        st.pyplot(fig_bar)
+
+        st.markdown("📈 **Tabel Market Share & Growth per Kategori**")
+        st.dataframe(pivot_df.style.format({2024: "{:.2f}%", 2025: "{:.2f}%", 'Growth (%)': "{:+.2f}%"}), use_container_width=True)
+
+    # 4. Gap Market Share Year-over-Year
     st.subheader("📉 Gap Market Share YoY per Kategori Produk")
     gap_df = filtered_df.groupby(['Kategori Produk', 'Tahun'])['Market Share (%)'].mean().unstack().diff(axis=1).dropna(axis=1)
     st.dataframe(gap_df.style.format("{:+.2f}%"), use_container_width=True)
 
-    # 4. Donut Chart Market Share per Marketplace
+    # 5. Donut Chart Market Share per Marketplace
     st.subheader("🥧 Distribusi Market Share per Marketplace")
     agg_market = filtered_df.groupby('Marketplace')['Market Share (%)'].sum()
     fig3, ax3 = plt.subplots(figsize=(6, 6))
@@ -88,7 +111,7 @@ if df is not None and not df.empty:
     ax3.axis('equal')
     st.pyplot(fig3)
 
-    # 5. Pertumbuhan Penjualan YoY per Kategori
+    # 6. Pertumbuhan Penjualan YoY per Kategori
     st.subheader("📊 Pertumbuhan Penjualan YoY per Kategori Produk")
     yoy_df = filtered_df.groupby(['Kategori Produk', 'Tahun'])['Penjualan (IDR)'].sum().unstack()
     yoy_growth = yoy_df.pct_change(axis=1) * 100
@@ -97,7 +120,7 @@ if df is not None and not df.empty:
     yoy_growth_display.columns.name = "Tahun"
     st.dataframe(yoy_growth_display.style.format("{:+.2f}%"), use_container_width=True)
 
-    # 6. Highlight Kategori dengan Market Share Tertinggi
+    # 7. Highlight Kategori dengan Market Share Tertinggi
     st.subheader("🏆 Kategori dengan Market Share Tertinggi (Tahun Terbaru)")
     tahun_terbaru = max(selected_tahun)
     latest_df = filtered_df[filtered_df['Tahun'] == tahun_terbaru]
