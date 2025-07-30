@@ -123,23 +123,23 @@ if df is not None and not df.empty:
             if not pivot.empty:
                 if tampilan_ringkas:
                     ringkas_cols = [col for col in pivot_display.columns if col in ['Kategori Produk', 2025, 'Growth']]
-                    st.dataframe(pivot_display[ringkas_cols], use_container_width=True)
+                    st.dataframe(pivot_display[ringkas_cols], use_container_width=True, hide_index=True)
                 else:
-                    st.dataframe(pivot_display, use_container_width=True)
+                    st.dataframe(pivot_display, use_container_width=True, hide_index=True)
             else:
                 st.warning("Data kosong setelah filter diterapkan.")
 
     elif sheet_tab == "Per Kategori Produk":
         st.subheader("\U0001F4CC Data per Kategori Produk")
-        st.dataframe(filtered_df.sort_values(by="Kategori Produk"), use_container_width=True)
+        st.dataframe(filtered_df.sort_values(by="Kategori Produk"), use_container_width=True, hide_index=True)
 
     elif sheet_tab == "Per Marketplace":
         st.subheader("\U0001F4CC Data per Marketplace")
-        st.dataframe(filtered_df.sort_values(by="Marketplace"), use_container_width=True)
+        st.dataframe(filtered_df.sort_values(by="Marketplace"), use_container_width=True, hide_index=True)
 
     elif sheet_tab == "Per Tahun":
         st.subheader("\U0001F4CC Data per Tahun")
-        st.dataframe(filtered_df.sort_values(by="Tahun"), use_container_width=True)
+        st.dataframe(filtered_df.sort_values(by="Tahun"), use_container_width=True, hide_index=True)
 
     st.caption("\U0001F4CC Data simulasi - bukan data aktual. Untuk keperluan analisis market share retail e-commerce Indonesia seperti Shopee, Tokopedia, TikTok Shop, dll.")
 
