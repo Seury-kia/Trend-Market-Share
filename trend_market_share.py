@@ -114,7 +114,7 @@ if df is not None and not df.empty:
 
             st.subheader(f"📋 {label} per Kategori Produk")
             st.caption(f"Menampilkan {sort_topflop} berdasarkan kolom '{sort_column}' dalam mode '{sort_mode}'")
-            st.dataframe(pivot, use_container_width=True, hide_index=True)
+            st.dataframe(pivot.style.set_sticky(axis="index"), use_container_width=True, hide_index=True)
 
     elif sheet_tab == "Per Kategori Produk":
         st.subheader("📌 Data per Kategori Produk")
