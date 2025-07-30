@@ -56,12 +56,6 @@ if df is not None and not df.empty:
     sort_by_year = st.radio("Tahun yang dijadikan acuan pengurutan:", ["2024", "2025"], horizontal=True)
     sort_by_year = int(sort_by_year)
 
-    def color_growth(val):
-        if isinstance(val, str):
-            return val
-        color = 'green' if val > 0 else 'red'
-        return f'<span style="color:{color}">{val:.2f}</span>'
-
     def prepare_table(metric):
         pivot_df = df_2024_2025.pivot_table(
             index='Kategori Produk', 
@@ -81,10 +75,18 @@ if df is not None and not df.empty:
         pivot_df.rename(columns={2024: '2024', 2025: '2025'}, inplace=True)
 
         if metric == 'Volume Sales (IDR)':
+            pivot_df['2024_raw'] = pivot_df['2024']
+            pivot_df['2025_raw'] = pivot_df['2025']
+            pivot_df['Gap_raw'] = pivot_df['Gap']
+
             pivot_df['2024'] = pivot_df['2024'].apply(lambda x: f"Rp{x:,.0f}")
             pivot_df['2025'] = pivot_df['2025'].apply(lambda x: f"Rp{x:,.0f}")
             pivot_df['Gap'] = pivot_df['Gap'].apply(lambda x: f"Rp{x:,.0f}")
         elif metric == 'Qty Sales':
+            pivot_df['2024_raw'] = pivot_df['2024']
+            pivot_df['2025_raw'] = pivot_df['2025']
+            pivot_df['Gap_raw'] = pivot_df['Gap']
+
             pivot_df['2024'] = pivot_df['2024'].apply(lambda x: f"{x:,.0f}")
             pivot_df['2025'] = pivot_df['2025'].apply(lambda x: f"{x:,.0f}")
             pivot_df['Gap'] = pivot_df['Gap'].apply(lambda x: f"{x:,.0f}")
@@ -93,22 +95,43 @@ if df is not None and not df.empty:
             pivot_df['2025'] = pivot_df['2025'].round(2)
             pivot_df['Gap'] = pivot_df['Gap'].round(2)
 
-        pivot_df['Growth (%)'] = pivot_df['Growth (%)'].round(2)
+        pivot_df['Growth_raw'] = pivot_df['Growth (%)']
+        pivot_df['Growth (%)'] = pivot_df['Growth (%)'].round(2).astype(str) + '%'
 
         return pivot_df
 
-    def sort_table(df, order='desc'):
-        sorted_df = df.sort_values(by='Total Sort Value', ascending=(order == 'asc')).drop(columns=['Total Sort Value'])
-        styled_df = sorted_df.style.set_properties(**{
-            'font-size': '12px',
+    def style_growth(val):
+        try:
+            val_float = float(val.replace('%', ''))
+            color = 'green' if val_float > 0 else 'red'
+            return f'color: {color}'
+        except:
+            return ''
+
+    def style_gap(val):
+        try:
+            val_num = float(str(val).replace('Rp', '').replace(',', '').replace('.', ''))
+            color = 'green' if val_num > 0 else 'red'
+            return f'color: {color}'
+        except:
+            return ''
+
+    def sort_table(df, order='desc', metric='Volume Sales (IDR)'):
+        sort_col = '2024_raw' if sort_by_year == 2024 else '2025_raw'
+        if metric == 'Market Share (%)':
+            sort_col = sort_by_year
+        sorted_df = df.sort_values(by=sort_col, ascending=(order == 'asc'))
+        styled_df = sorted_df.drop(columns=['Total Sort Value'] + [col for col in sorted_df.columns if '_raw' in col])
+        styled_df = styled_df.style.set_properties(**{
+            'font-size': '13px',
             'text-align': 'left'
-        }).applymap(lambda v: 'color: green' if isinstance(v, float) and v > 0 else ('color: red' if isinstance(v, float) and v < 0 else None), subset=['Growth (%)', 'Gap'])
+        }).applymap(style_growth, subset=['Growth (%)']).applymap(style_gap, subset=['Gap'])
         return styled_df
 
     st.subheader("📈 Tabel Market Share (%)")
     sort_order_ms = st.selectbox("Urutkan Market Share berdasarkan:", ["Large to Small", "Small to Large"], key="ms_sort")
     df_ms = prepare_table('Market Share (%)')
-    st.write(sort_table(df_ms, order='desc' if sort_order_ms == "Large to Small" else 'asc'))
+    st.write(sort_table(df_ms, order='desc' if sort_order_ms == "Large to Small" else 'asc', metric='Market Share (%)'))
 
     st.subheader("💰 Tabel Volume Sales (IDR)")
     sort_order_vs = st.selectbox("Urutkan Volume Sales berdasarkan:", ["Large to Small", "Small to Large"], key="vs_sort")
