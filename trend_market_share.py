@@ -69,8 +69,8 @@ if df is not None and not df.empty:
             pivot['Growth'] = ((pivot[2025] - pivot[2024]) / pivot[2024]) * 100
 
             sort_column = st.selectbox(f"Urutkan {label} berdasarkan:", options=[2024, 2025, 'Gap', 'Growth'], key=label)
-            sort_order = st.radio(f"Urutan {label}", ["Descending", "Ascending"], key=label+"_order")
-            ascending_sort = sort_order == "Ascending"
+            sort_order = st.radio(f"Urutan {label}", ["Largest", "Smallest"], horizontal=True, key=label+"_order")
+            ascending_sort = sort_order == "Smallest"
             pivot = pivot.sort_values(by=sort_column, ascending=ascending_sort)
 
             if is_percent:
