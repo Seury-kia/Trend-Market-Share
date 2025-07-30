@@ -52,7 +52,6 @@ if df is not None and not df.empty:
 
     df_2024_2025 = filtered_df[filtered_df['Tahun'].isin([2024, 2025])]
 
-    # Tahun untuk pengurutan
     sort_by_year = st.radio("Tahun yang dijadikan acuan pengurutan:", ["2024", "2025"], horizontal=True)
     sort_by_year = int(sort_by_year)
 
@@ -68,17 +67,14 @@ if df is not None and not df.empty:
             pivot_df['Growth (%)'] = ((pivot_df[2025] - pivot_df[2024]) / pivot_df[2024]) * 100
             pivot_df['Gap'] = pivot_df[2025] - pivot_df[2024]
 
-        # Tambahkan kolom total untuk sorting
         pivot_df['Total Sort Value'] = pivot_df[sort_by_year] if sort_by_year in pivot_df.columns else 0
 
-        # Rename columns
         pivot_df.rename(columns={2024: '2024', 2025: '2025'}, inplace=True)
 
         if metric == 'Volume Sales (IDR)':
             pivot_df['2024_raw'] = pivot_df['2024']
             pivot_df['2025_raw'] = pivot_df['2025']
             pivot_df['Gap_raw'] = pivot_df['Gap']
-
             pivot_df['2024'] = pivot_df['2024'].apply(lambda x: f"Rp{x:,.0f}")
             pivot_df['2025'] = pivot_df['2025'].apply(lambda x: f"Rp{x:,.0f}")
             pivot_df['Gap'] = pivot_df['Gap'].apply(lambda x: f"Rp{x:,.0f}")
@@ -86,7 +82,6 @@ if df is not None and not df.empty:
             pivot_df['2024_raw'] = pivot_df['2024']
             pivot_df['2025_raw'] = pivot_df['2025']
             pivot_df['Gap_raw'] = pivot_df['Gap']
-
             pivot_df['2024'] = pivot_df['2024'].apply(lambda x: f"{x:,.0f}")
             pivot_df['2025'] = pivot_df['2025'].apply(lambda x: f"{x:,.0f}")
             pivot_df['Gap'] = pivot_df['Gap'].apply(lambda x: f"{x:,.0f}")
@@ -130,7 +125,7 @@ if df is not None and not df.empty:
         drop_cols = ['Total Sort Value'] + [col for col in sorted_df.columns if '_raw' in col and col in sorted_df.columns]
         styled_df = sorted_df.drop(columns=drop_cols, errors='ignore')
         styled_df = styled_df.style.set_properties(**{
-            'font-size': '13px',
+            'font-size': '12px',
             'text-align': 'left'
         }).applymap(style_growth, subset=['Growth (%)']).applymap(style_gap, subset=['Gap'])
         return styled_df
