@@ -70,6 +70,8 @@ if df is not None and not df.empty:
     if sheet_tab == "Performance Detail":
         df_2024_2025 = filtered_df[filtered_df['Tahun'].isin([2024, 2025])]
 
+        tampilan_ringkas = st.toggle("Tampilkan versi ringkas (Mobile Friendly)", value=False)
+
         for metric, label, is_percent, is_currency in [
             ('Market Share (%)', 'Market Share (%)', True, False),
             ('Volume Sales (IDR)', 'Volume Sales (IDR)', False, True),
@@ -116,9 +118,14 @@ if df is not None and not df.empty:
 
             st.subheader(f"\U0001F4CB {label} per Kategori Produk")
             st.caption(f"Menampilkan {sort_topflop} berdasarkan kolom '{sort_column}' dalam mode '{sort_mode}'")
+            st.markdown("*Geser tabel ke kanan untuk melihat data selengkapnya →*")
 
             if not pivot.empty:
-                st.dataframe(pivot_display, use_container_width=True)
+                if tampilan_ringkas:
+                    ringkas_cols = [col for col in pivot_display.columns if col in ['Kategori Produk', 2025, 'Growth']]
+                    st.dataframe(pivot_display[ringkas_cols], use_container_width=True)
+                else:
+                    st.dataframe(pivot_display, use_container_width=True)
             else:
                 st.warning("Data kosong setelah filter diterapkan.")
 
