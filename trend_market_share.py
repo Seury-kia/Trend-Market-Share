@@ -114,11 +114,12 @@ if df is not None and not df.empty:
 
             st.subheader(f"📋 {label} per Kategori Produk")
             st.caption(f"Menampilkan {sort_topflop} berdasarkan kolom '{sort_column}' dalam mode '{sort_mode}'")
-            st.dataframe(
-                pivot.style.set_sticky(axis="both"),  # Freeze header & kolom kategori
-                use_container_width=True,
-                hide_index=True
-            )
+
+            if not pivot.empty:
+                styled_pivot = pivot.style.set_sticky(axis="both")
+                st.dataframe(styled_pivot, use_container_width=True, hide_index=True)
+            else:
+                st.warning("Data kosong setelah filter diterapkan.")
 
     elif sheet_tab == "Per Kategori Produk":
         st.subheader("📌 Data per Kategori Produk")
