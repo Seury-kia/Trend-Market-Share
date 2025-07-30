@@ -61,6 +61,14 @@ if df is not None and not df.empty:
         if 'All' in selected_kategori:
             selected_kategori = kategori_list
 
+        st.markdown("---")
+        st.header("\U0001F4DD Pilih Jenis Data")
+        selected_metrics = st.multiselect(
+            "Tampilkan metrik:",
+            options=["Market Share (%)", "Volume Sales (IDR)", "Qty Sales"],
+            default=["Market Share (%)"]
+        )
+
     filtered_df = df[(df['Marketplace'].isin(selected_marketplace)) & 
                      (df['Tahun'].isin(selected_tahun)) & 
                      (df['Kategori Produk'].isin(selected_kategori))]
@@ -77,6 +85,9 @@ if df is not None and not df.empty:
             ('Volume Sales (IDR)', 'Volume Sales (IDR)', False, True),
             ('Qty Sales', 'Qty Sales', False, False)
         ]:
+            if label not in selected_metrics:
+                continue
+
             grouped = df_2024_2025.groupby(['Kategori Produk', 'Tahun'])[metric].sum().reset_index()
             pivot = grouped.pivot(index='Kategori Produk', columns='Tahun', values=metric).reset_index()
 
