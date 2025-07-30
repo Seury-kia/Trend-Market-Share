@@ -56,6 +56,12 @@ if df is not None and not df.empty:
     sort_by_year = st.radio("Tahun yang dijadikan acuan pengurutan:", ["2024", "2025"], horizontal=True)
     sort_by_year = int(sort_by_year)
 
+    def color_growth(val):
+        if isinstance(val, str):
+            return val
+        color = 'green' if val > 0 else 'red'
+        return f'<span style="color:{color}">{val:.2f}</span>'
+
     def prepare_table(metric):
         pivot_df = df_2024_2025.pivot_table(
             index='Kategori Produk', 
@@ -92,22 +98,27 @@ if df is not None and not df.empty:
         return pivot_df
 
     def sort_table(df, order='desc'):
-        return df.sort_values(by='Total Sort Value', ascending=(order == 'asc')).drop(columns=['Total Sort Value'])
+        sorted_df = df.sort_values(by='Total Sort Value', ascending=(order == 'asc')).drop(columns=['Total Sort Value'])
+        styled_df = sorted_df.style.set_properties(**{
+            'font-size': '12px',
+            'text-align': 'left'
+        }).applymap(lambda v: 'color: green' if isinstance(v, float) and v > 0 else ('color: red' if isinstance(v, float) and v < 0 else None), subset=['Growth (%)', 'Gap'])
+        return styled_df
 
     st.subheader("📈 Tabel Market Share (%)")
     sort_order_ms = st.selectbox("Urutkan Market Share berdasarkan:", ["Large to Small", "Small to Large"], key="ms_sort")
     df_ms = prepare_table('Market Share (%)')
-    st.dataframe(sort_table(df_ms, order='desc' if sort_order_ms == "Large to Small" else 'asc'), use_container_width=True)
+    st.write(sort_table(df_ms, order='desc' if sort_order_ms == "Large to Small" else 'asc'))
 
     st.subheader("💰 Tabel Volume Sales (IDR)")
     sort_order_vs = st.selectbox("Urutkan Volume Sales berdasarkan:", ["Large to Small", "Small to Large"], key="vs_sort")
     df_vs = prepare_table('Volume Sales (IDR)')
-    st.dataframe(sort_table(df_vs, order='desc' if sort_order_vs == "Large to Small" else 'asc'), use_container_width=True)
+    st.write(sort_table(df_vs, order='desc' if sort_order_vs == "Large to Small" else 'asc'))
 
     st.subheader("📦 Tabel Qty Sales")
     sort_order_qs = st.selectbox("Urutkan Qty Sales berdasarkan:", ["Large to Small", "Small to Large"], key="qs_sort")
     df_qs = prepare_table('Qty Sales')
-    st.dataframe(sort_table(df_qs, order='desc' if sort_order_qs == "Large to Small" else 'asc'), use_container_width=True)
+    st.write(sort_table(df_qs, order='desc' if sort_order_qs == "Large to Small" else 'asc'))
 
     st.markdown("---")
     st.caption("📌 Data simulasi - bukan data aktual. Untuk keperluan analisis market share retail e-commerce Indonesia seperti Shopee, Tokopedia, TikTok Shop, dll.")
