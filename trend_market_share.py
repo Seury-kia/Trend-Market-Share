@@ -125,16 +125,19 @@ if df is not None and not df.empty:
 
             if not pivot.empty:
                 gb = GridOptionsBuilder.from_dataframe(pivot_display)
-                gb.configure_default_column(enableColumnResizing=True, wrapText=False, autoHeight=False)
-                gb.configure_column("Kategori Produk", pinned='left')
-                gb.configure_grid_options(domLayout='autoHeight')
+                gb.configure_default_column(enableColumnResizing=True, wrapText=False, autoHeight=False, resizable=True)
+                gb.configure_column("Kategori Produk", pinned='left', minWidth=200)
+                for col in pivot_display.columns:
+                    gb.configure_column(col, wrapText=False, minWidth=120)
+                gb.configure_grid_options(domLayout='normal')
                 grid_options = gb.build()
                 AgGrid(
                     pivot_display,
                     gridOptions=grid_options,
                     enable_enterprise_modules=False,
-                    fit_columns_on_grid_load=True,
-                    use_container_width=True
+                    fit_columns_on_grid_load=False,
+                    use_container_width=True,
+                    height=400
                 )
             else:
                 st.warning("Data kosong setelah filter diterapkan.")
