@@ -68,9 +68,9 @@ if df is not None and not df.empty:
             pivot['Gap'] = pivot[2025] - pivot[2024]
             pivot['Growth'] = ((pivot[2025] - pivot[2024]) / pivot[2024]) * 100
 
-            # Tambahkan kolom total untuk sorting
+            # Simpan nilai numerik asli untuk keperluan sorting
             pivot['Total'] = pivot[2024] + pivot[2025]
-            pivot = pivot.sort_values(by='Total', ascending=False).drop(columns=['Total'])
+            pivot = pivot.sort_values(by='Total', ascending=False)
 
             if is_percent:
                 for year in [2024, 2025]:
@@ -89,7 +89,7 @@ if df is not None and not df.empty:
                 pivot['Growth'] = pivot['Growth'].apply(lambda x: f"{x:.2f}%")
 
             st.subheader(f"📋 {label} per Kategori Produk")
-            st.dataframe(pivot, use_container_width=True)
+            st.dataframe(pivot.drop(columns=['Total']), use_container_width=True)
 
     elif sheet_tab == "Per Kategori Produk":
         st.subheader("📌 Data per Kategori Produk")
