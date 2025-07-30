@@ -121,8 +121,7 @@ if df is not None and not df.empty:
             st.caption(f"Menampilkan {sort_topflop} berdasarkan kolom '{sort_column}' dalam mode '{sort_mode}'")
 
             if not pivot.empty:
-                styled_pivot = pivot.style.set_sticky(axis="both")
-                st.dataframe(styled_pivot, use_container_width=True, hide_index=True)
+                st.dataframe(pivot, use_container_width=True, hide_index=True)
             else:
                 st.warning("Data kosong setelah filter diterapkan.")
 
