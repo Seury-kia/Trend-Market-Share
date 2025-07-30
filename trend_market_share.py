@@ -105,15 +105,15 @@ if df is not None and not df.empty:
             pivot_display = pivot.copy()
 
             for col in pivot_display.columns:
-                if pivot_display[col].dtype in ['float64', 'int64']:
+                if col != "Kategori Produk":
                     if is_percent and col in [2024, 2025, 'Gap', 'Growth']:
-                        pivot_display[col] = pivot_display[col].apply(lambda x: f"{x:.2f}%")
+                        pivot_display[col] = pivot_display[col].apply(lambda x: f"{x:.2f}%" if pd.notnull(x) else "")
                     elif is_currency and col in [2024, 2025, 'Gap']:
-                        pivot_display[col] = pivot_display[col].apply(lambda x: f"Rp{x:,.0f}")
+                        pivot_display[col] = pivot_display[col].apply(lambda x: f"Rp{x:,.0f}" if pd.notnull(x) else "")
                     elif col == 'Growth':
-                        pivot_display[col] = pivot_display[col].apply(lambda x: f"{x:.2f}%")
+                        pivot_display[col] = pivot_display[col].apply(lambda x: f"{x:.2f}%" if pd.notnull(x) else "")
                     else:
-                        pivot_display[col] = pivot_display[col].apply(lambda x: f"{x:,.0f}")
+                        pivot_display[col] = pivot_display[col].apply(lambda x: f"{x:,.0f}" if pd.notnull(x) else "")
 
             st.subheader(f"\U0001F4CB {label} per Kategori Produk")
             st.caption(f"Menampilkan {sort_topflop} berdasarkan kolom '{sort_column}' dalam mode '{sort_mode}'")
