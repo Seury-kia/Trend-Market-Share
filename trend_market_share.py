@@ -51,21 +51,29 @@ if df is not None and not df.empty:
     st.title("📊 Dashboard Trend Market Share Indonesia - Retail/FMCG")
 
     # 1. Tabel Detail Market Share per Kategori Tahun 2024 & 2025
-    st.subheader("📊 Tabel Data per Kategori - Tahun 2024 & 2025")
+    st.subheader("📊 Tabel Data per Kategori - Horizontal Tahun")
     df_2024_2025 = filtered_df[filtered_df['Tahun'].isin([2024, 2025])]
     if not df_2024_2025.empty:
-        table_df = df_2024_2025.groupby(['Kategori Produk', 'Tahun']).agg({
-            'Market Share (%)': 'mean',
-            'Penjualan (IDR)': 'sum',
-            'Volume Unit': 'sum'
-        }).reset_index()
+        pivot_df = df_2024_2025.pivot_table(
+            index='Kategori Produk', 
+            columns='Tahun', 
+            values=['Market Share (%)', 'Penjualan (IDR)', 'Volume Unit'], 
+            aggfunc={'Market Share (%)': 'mean', 'Penjualan (IDR)': 'sum', 'Volume Unit': 'sum'}
+        )
 
-        table_df = table_df.sort_values(by=['Kategori Produk', 'Tahun'])
-        table_df['Market Share (%)'] = table_df['Market Share (%)'].round(2)
-        table_df['Penjualan (IDR)'] = table_df['Penjualan (IDR)'].apply(lambda x: f"Rp{x:,.0f}")
-        table_df['Volume Unit'] = table_df['Volume Unit'].apply(lambda x: f"{x:,.0f}")
+        pivot_df.columns = [f"{metric} {year}" for metric, year in pivot_df.columns]
+        pivot_df = pivot_df.reset_index()
 
-        st.dataframe(table_df, use_container_width=True)
+        # Format angka
+        for col in pivot_df.columns:
+            if 'Penjualan (IDR)' in col:
+                pivot_df[col] = pivot_df[col].apply(lambda x: f"Rp{x:,.0f}")
+            elif 'Volume Unit' in col:
+                pivot_df[col] = pivot_df[col].apply(lambda x: f"{x:,.0f}")
+            elif 'Market Share (%)' in col:
+                pivot_df[col] = pivot_df[col].round(2)
+
+        st.dataframe(pivot_df, use_container_width=True)
 
     # Footer
     st.markdown("---")
