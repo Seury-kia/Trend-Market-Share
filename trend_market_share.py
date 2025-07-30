@@ -49,10 +49,6 @@ if df is not None and not df.empty:
         selected_tahun = st.multiselect("Pilih Tahun", options=sorted(df['Tahun'].unique()), default=sorted(df['Tahun'].unique()))
         selected_kategori = st.multiselect("Pilih Kategori Produk", options=df['Kategori Produk'].unique(), default=df['Kategori Produk'].unique())
 
-        st.markdown("---")
-        sort_order = st.radio("Urutkan berdasarkan total 2024 + 2025", ["Largest to Smallest", "Smallest to Largest"], index=0)
-        ascending_sort = sort_order == "Smallest to Largest"
-
     filtered_df = df[(df['Marketplace'].isin(selected_marketplace)) & 
                      (df['Tahun'].isin(selected_tahun)) & 
                      (df['Kategori Produk'].isin(selected_kategori))]
@@ -72,8 +68,10 @@ if df is not None and not df.empty:
             pivot['Gap'] = pivot[2025] - pivot[2024]
             pivot['Growth'] = ((pivot[2025] - pivot[2024]) / pivot[2024]) * 100
 
-            pivot['Total'] = pivot[2024] + pivot[2025]
-            pivot = pivot.sort_values(by='Total', ascending=ascending_sort)
+            sort_column = st.selectbox(f"Urutkan {label} berdasarkan:", options=[2024, 2025, 'Gap', 'Growth'], key=label)
+            sort_order = st.radio(f"Urutan {label}", ["Descending", "Ascending"], key=label+"_order")
+            ascending_sort = sort_order == "Ascending"
+            pivot = pivot.sort_values(by=sort_column, ascending=ascending_sort)
 
             if is_percent:
                 for year in [2024, 2025]:
@@ -92,7 +90,7 @@ if df is not None and not df.empty:
                 pivot['Growth'] = pivot['Growth'].apply(lambda x: f"{x:.2f}%")
 
             st.subheader(f"📋 {label} per Kategori Produk")
-            st.dataframe(pivot.drop(columns=['Total']), use_container_width=True)
+            st.dataframe(pivot, use_container_width=True)
 
     elif sheet_tab == "Per Kategori Produk":
         st.subheader("📌 Data per Kategori Produk")
