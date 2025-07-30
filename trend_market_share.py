@@ -45,9 +45,21 @@ if df is not None and not df.empty:
 
         st.markdown("---")
         st.header("🔍 Filter Data")
-        selected_marketplace = st.multiselect("Pilih Marketplace", options=df['Marketplace'].unique(), default=df['Marketplace'].unique())
-        selected_tahun = st.multiselect("Pilih Tahun", options=sorted(df['Tahun'].unique()), default=sorted(df['Tahun'].unique()))
-        selected_kategori = st.multiselect("Pilih Kategori Produk", options=df['Kategori Produk'].unique(), default=df['Kategori Produk'].unique())
+
+        marketplace_list = df['Marketplace'].unique().tolist()
+        tahun_list = sorted(df['Tahun'].unique().tolist())
+        kategori_list = df['Kategori Produk'].unique().tolist()
+
+        selected_marketplace = st.multiselect("Pilih Marketplace", options=['All'] + marketplace_list, default=['All'])
+        selected_tahun = st.multiselect("Pilih Tahun", options=['All'] + tahun_list, default=['All'])
+        selected_kategori = st.multiselect("Pilih Kategori Produk", options=['All'] + kategori_list, default=['All'])
+
+        if 'All' in selected_marketplace:
+            selected_marketplace = marketplace_list
+        if 'All' in selected_tahun:
+            selected_tahun = tahun_list
+        if 'All' in selected_kategori:
+            selected_kategori = kategori_list
 
     filtered_df = df[(df['Marketplace'].isin(selected_marketplace)) & 
                      (df['Tahun'].isin(selected_tahun)) & 
@@ -101,6 +113,7 @@ if df is not None and not df.empty:
                 pivot['Growth'] = pivot['Growth'].apply(lambda x: f"{x:.2f}%")
 
             st.subheader(f"📋 {label} per Kategori Produk")
+            st.caption(f"Menampilkan {sort_topflop} berdasarkan kolom '{sort_column}' dalam mode '{sort_mode}'")
             st.dataframe(pivot, use_container_width=True)
 
     elif sheet_tab == "Per Kategori Produk":
