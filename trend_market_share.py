@@ -2,60 +2,63 @@ import streamlit as st
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
-import matplotlib.ticker as mtick
 
-st.set_page_config(page_title="Trend Market Share FMCG", layout="wide")
-st.title("📊 Dashboard Trend Market Share - FMCG Indonesia")
+# Set up layout
+st.set_page_config(page_title="Dashboard Trend Market Share Indonesia", layout="wide")
+sns.set(style="whitegrid")
 
-# --- Upload atau input link Google Sheet
-st.sidebar.header("🔗 Data Source")
-sheet_url = st.sidebar.text_input("Masukkan Link Google Sheet (format CSV):")
-
+# Load data from Google Sheet (published as CSV)
 @st.cache_data
-def load_data(url):
-    return pd.read_csv(url)
+def load_data():
+    sheet_url = "https://docs.google.com/spreadsheets/d/1n9uo1ykNZqV_iNzvhg9MgKvQdTxzyaVDN_a49_hiN6g/export?format=csv&id=1n9uo1ykNZqV_iNzvhg9MgKvQdTxzyaVDN_a49_hiN6g&gid=0"
+    df = pd.read_csv(sheet_url, header=1)
+    df.columns = df.columns.str.strip()
+    df['Market Share (%)'] = df['Market Share ( % )'].str.replace('%', '').astype(float)
+    df['Penjualan (IDR)'] = df['Penjualan ( IDR )'].str.replace(',', '').astype(float)
+    df['Volume Unit'] = df['Volume Unit'].str.replace(',', '').astype(float)
+    df['Tahun'] = df['Tahun'].astype(int)
+    df = df.drop(columns=['Market Share ( % )', 'Penjualan ( IDR )'])
+    return df
 
-if sheet_url:
-    try:
-        df = load_data(sheet_url)
+df = load_data()
 
-        # Format DataFrame
-        df['Tahun'] = df['Tahun'].astype(int)
-        kategori = df['Kategori'].unique()
+# Sidebar filters
+st.sidebar.header("Filter Data")
+selected_marketplace = st.sidebar.multiselect("Pilih Marketplace", options=df['Marketplace'].unique(), default=df['Marketplace'].unique())
+selected_tahun = st.sidebar.multiselect("Pilih Tahun", options=sorted(df['Tahun'].unique()), default=sorted(df['Tahun'].unique()))
 
-        st.subheader("1️⃣ Tabel Market Share & Gap")
-        pivot_df = df.pivot(index='Kategori', columns='Tahun', values='Market Share (%)').reset_index()
-        pivot_df['Gap (%)'] = pivot_df[2024] - pivot_df[2023]
-        pivot_df['Kontribusi 2024 (%)'] = pivot_df[2024]
+filtered_df = df[(df['Marketplace'].isin(selected_marketplace)) & (df['Tahun'].isin(selected_tahun))]
 
-        st.dataframe(pivot_df.style.format({
-            2023: "{:.1f}%",
-            2024: "{:.1f}%",
-            "Gap (%)": "{:+.1f}%",
-            "Kontribusi 2024 (%)": "{:.1f}%"
-        }), use_container_width=True)
+# Title
+st.title("📊 Dashboard Trend Market Share Indonesia - Retail/FMCG")
 
-        # Pie Chart - Komposisi Market Share
-        st.subheader("2️⃣ Komposisi Market Share 2024")
-        fig1, ax1 = plt.subplots()
-        ax1.pie(pivot_df['Kontribusi 2024 (%)'], labels=pivot_df['Kategori'], autopct='%1.1f%%', startangle=90)
-        ax1.axis('equal')
-        st.pyplot(fig1)
+# 1. Tren Market Share per Kategori
+st.subheader("Trend Market Share (%) per Kategori Produk")
+fig1, ax1 = plt.subplots(figsize=(12, 5))
+sns.lineplot(data=filtered_df, x="Tahun", y="Market Share (%)", hue="Kategori Produk", marker="o", style="Marketplace", ax=ax1)
+ax1.set_ylabel("Market Share (%)")
+st.pyplot(fig1)
 
-        # Bar Chart - Gap Market Share
-        st.subheader("3️⃣ GAP Market Share 2024 vs 2023")
-        fig2, ax2 = plt.subplots()
-        sns.barplot(data=pivot_df, y='Kategori', x='Gap (%)', ax=ax2, palette='coolwarm')
-        ax2.axvline(0, color='gray', linestyle='--')
-        st.pyplot(fig2)
+# 2. Kontribusi Kategori per Marketplace
+st.subheader("Kontribusi Penjualan (IDR) per Kategori dan Marketplace")
+fig2, ax2 = plt.subplots(figsize=(12, 6))
+sns.barplot(data=filtered_df, x="Penjualan (IDR)", y="Kategori Produk", hue="Marketplace", estimator=sum, ci=None, ax=ax2)
+ax2.set_xlabel("Total Penjualan (IDR)")
+st.pyplot(fig2)
 
-        # Line Chart (Optional): Trend Bulanan (jika tersedia)
-        if 'Bulan' in df.columns:
-            st.subheader("4️⃣ Trend Bulanan Market Share")
-            line_df = df.pivot_table(index='Bulan', columns='Kategori', values='Market Share (%)')
-            st.line_chart(line_df)
+# 3. Gap Market Share Year-over-Year
+st.subheader("Gap Market Share YoY per Kategori Produk")
+gap_df = filtered_df.groupby(['Kategori Produk', 'Tahun'])['Market Share (%)'].mean().unstack().diff(axis=1).dropna(axis=1)
+st.dataframe(gap_df, use_container_width=True)
 
-    except Exception as e:
-        st.error(f"⚠️ Gagal memuat data: {e}")
-else:
-    st.info("📥 Masukkan link Google Sheet CSV untuk memulai analisis.")
+# 4. Donut Chart Kontribusi Total per Marketplace
+st.subheader("Distribusi Market Share per Marketplace")
+agg_market = filtered_df.groupby('Marketplace')['Market Share (%)'].sum()
+fig3, ax3 = plt.subplots(figsize=(6, 6))
+wedges, texts, autotexts = ax3.pie(agg_market, labels=agg_market.index, autopct='%1.1f%%', startangle=140, wedgeprops=dict(width=0.4))
+ax3.axis('equal')
+st.pyplot(fig3)
+
+# Footer
+st.markdown("---")
+st.caption("Data bersifat dummy untuk simulasi analisis pasar retail Indonesia (Shopee, Tokopedia, TikTok Shop, dll)")
