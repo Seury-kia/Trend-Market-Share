@@ -3,7 +3,6 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 import matplotlib.ticker as mtick
-from st_aggrid import AgGrid, GridOptionsBuilder
 
 # Set up layout
 st.set_page_config(page_title="Dashboard Trend Market Share Indonesia", layout="wide")
@@ -126,22 +125,7 @@ if df is not None and not df.empty:
                     ringkas_cols = [col for col in pivot_display.columns if col in ['Kategori Produk', 2025, 'Growth']]
                     st.dataframe(pivot_display[ringkas_cols], use_container_width=True, hide_index=True)
                 else:
-                    gb = GridOptionsBuilder.from_dataframe(pivot_display)
-                    gb.configure_default_column(wrapText=False, autoHeight=False)
-                    gb.configure_column("Kategori Produk", pinned="left", width=200)
-                    for col in pivot_display.columns:
-                        if col != "Kategori Produk":
-                            gb.configure_column(col, autoWidth=True)
-                    grid_options = gb.build()
-
-                    AgGrid(
-                        pivot_display,
-                        gridOptions=grid_options,
-                        fit_columns_on_grid_load=True,
-                        allow_unsafe_jscode=True,
-                        height=400,
-                        theme="streamlit",
-                    )
+                    st.dataframe(pivot_display, use_container_width=True, hide_index=True)
             else:
                 st.warning("Data kosong setelah filter diterapkan.")
 
