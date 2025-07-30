@@ -102,32 +102,35 @@ if df is not None and not df.empty:
             elif sort_topflop == "Flop":
                 pivot = pivot.tail(10)
 
+            # Salin untuk tampilan, tetap jaga tipe data numerik
+            pivot_display = pivot.copy()
+
             if is_percent:
                 for year in [2024, 2025]:
-                    pivot[year] = pivot[year].apply(lambda x: f"{x:.2f}%")
-                pivot['Gap'] = pivot['Gap'].apply(lambda x: f"{x:.2f}%")
-                pivot['Growth'] = pivot['Growth'].apply(lambda x: f"{x:.2f}%")
+                    pivot_display[year] = pivot_display[year].apply(lambda x: f"{x:.2f}%")
+                pivot_display['Gap'] = pivot_display['Gap'].apply(lambda x: f"{x:.2f}%")
+                pivot_display['Growth'] = pivot_display['Growth'].apply(lambda x: f"{x:.2f}%")
             elif is_currency:
                 for year in [2024, 2025]:
-                    pivot[year] = pivot[year].apply(lambda x: f"Rp{x:,.0f}")
-                pivot['Gap'] = pivot['Gap'].apply(lambda x: f"Rp{x:,.0f}")
-                pivot['Growth'] = pivot['Growth'].apply(lambda x: f"{x:.2f}%")
+                    pivot_display[year] = pivot_display[year].apply(lambda x: f"Rp{x:,.0f}")
+                pivot_display['Gap'] = pivot_display['Gap'].apply(lambda x: f"Rp{x:,.0f}")
+                pivot_display['Growth'] = pivot_display['Growth'].apply(lambda x: f"{x:.2f}%")
             else:
                 for year in [2024, 2025]:
-                    pivot[year] = pivot[year].apply(lambda x: f"{x:,.0f}")
-                pivot['Gap'] = pivot['Gap'].apply(lambda x: f"{x:,.0f}")
-                pivot['Growth'] = pivot['Growth'].apply(lambda x: f"{x:.2f}%")
+                    pivot_display[year] = pivot_display[year].apply(lambda x: f"{x:,.0f}")
+                pivot_display['Gap'] = pivot_display['Gap'].apply(lambda x: f"{x:,.0f}")
+                pivot_display['Growth'] = pivot_display['Growth'].apply(lambda x: f"{x:.2f}%")
 
             st.subheader(f"📋 {label} per Kategori Produk")
             st.caption(f"Menampilkan {sort_topflop} berdasarkan kolom '{sort_column}' dalam mode '{sort_mode}'")
 
             if not pivot.empty:
-                gb = GridOptionsBuilder.from_dataframe(pivot)
+                gb = GridOptionsBuilder.from_dataframe(pivot_display)
                 gb.configure_default_column(enableColumnResizing=True, wrapText=True, autoHeight=True)
                 gb.configure_grid_options(domLayout='normal', suppressHorizontalScroll=False)
                 gb.configure_column("Kategori Produk", pinned='left')
                 gridOptions = gb.build()
-                AgGrid(pivot, gridOptions=gridOptions, enable_enterprise_modules=True, height=400)
+                AgGrid(pivot_display, gridOptions=gridOptions, enable_enterprise_modules=True, height=400)
             else:
                 st.warning("Data kosong setelah filter diterapkan.")
 
