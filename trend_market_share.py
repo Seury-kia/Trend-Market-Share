@@ -39,10 +39,15 @@ df = load_data()
 
 if df is not None and not df.empty:
     # Sidebar filters
-    st.sidebar.header("🔍 Filter Data")
-    selected_marketplace = st.sidebar.multiselect("Pilih Marketplace", options=df['Marketplace'].unique(), default=df['Marketplace'].unique())
-    selected_tahun = st.sidebar.multiselect("Pilih Tahun", options=sorted(df['Tahun'].unique()), default=sorted(df['Tahun'].unique()))
-    selected_kategori = st.sidebar.multiselect("Pilih Kategori Produk", options=df['Kategori Produk'].unique(), default=df['Kategori Produk'].unique())
+    with st.sidebar:
+        st.header("📌 Navigasi Data Berdasarkan:")
+        sheet_tab = st.radio("Pilih Tampilan:", ["Keseluruhan", "Per Kategori", "Per Marketplace", "Per Tahun"])
+
+        st.markdown("---")
+        st.header("🔍 Filter Data")
+        selected_marketplace = st.multiselect("Pilih Marketplace", options=df['Marketplace'].unique(), default=df['Marketplace'].unique())
+        selected_tahun = st.multiselect("Pilih Tahun", options=sorted(df['Tahun'].unique()), default=sorted(df['Tahun'].unique()))
+        selected_kategori = st.multiselect("Pilih Kategori Produk", options=df['Kategori Produk'].unique(), default=df['Kategori Produk'].unique())
 
     filtered_df = df[(df['Marketplace'].isin(selected_marketplace)) & 
                      (df['Tahun'].isin(selected_tahun)) & 
@@ -134,27 +139,25 @@ if df is not None and not df.empty:
         }).applymap(style_growth, subset=['Growth (%)']).applymap(style_gap, subset=['Gap'])
         return styled_df
 
-    st.subheader("📊 Tabel Ringkasan Keseluruhan")
-    st.subheader("📈 Market Share (%)")
-    sort_order_ms = st.selectbox("Urutkan Market Share berdasarkan:", ["Large to Small", "Small to Large"], key="ms_sort")
-    df_ms = prepare_table('Market Share (%)')
-    st.write(sort_table(df_ms, order='desc' if sort_order_ms == "Large to Small" else 'asc', metric='Market Share (%)'))
+    if sheet_tab == "Keseluruhan":
+        st.subheader("📊 Tabel Ringkasan Keseluruhan")
+        st.subheader("📈 Market Share (%)")
+        sort_order_ms = st.selectbox("Urutkan Market Share berdasarkan:", ["Large to Small", "Small to Large"], key="ms_sort")
+        df_ms = prepare_table('Market Share (%)')
+        st.write(sort_table(df_ms, order='desc' if sort_order_ms == "Large to Small" else 'asc', metric='Market Share (%)'))
 
-    st.subheader("💰 Volume Sales (IDR)")
-    sort_order_vs = st.selectbox("Urutkan Volume Sales berdasarkan:", ["Large to Small", "Small to Large"], key="vs_sort")
-    df_vs = prepare_table('Volume Sales (IDR)')
-    st.write(sort_table(df_vs, order='desc' if sort_order_vs == "Large to Small" else 'asc'))
+        st.subheader("💰 Volume Sales (IDR)")
+        sort_order_vs = st.selectbox("Urutkan Volume Sales berdasarkan:", ["Large to Small", "Small to Large"], key="vs_sort")
+        df_vs = prepare_table('Volume Sales (IDR)')
+        st.write(sort_table(df_vs, order='desc' if sort_order_vs == "Large to Small" else 'asc'))
 
-    st.subheader("📦 Qty Sales")
-    sort_order_qs = st.selectbox("Urutkan Qty Sales berdasarkan:", ["Large to Small", "Small to Large"], key="qs_sort")
-    df_qs = prepare_table('Qty Sales')
-    st.write(sort_table(df_qs, order='desc' if sort_order_qs == "Large to Small" else 'asc'))
+        st.subheader("📦 Qty Sales")
+        sort_order_qs = st.selectbox("Urutkan Qty Sales berdasarkan:", ["Large to Small", "Small to Large"], key="qs_sort")
+        df_qs = prepare_table('Qty Sales')
+        st.write(sort_table(df_qs, order='desc' if sort_order_qs == "Large to Small" else 'asc'))
 
-    st.markdown("---")
-    st.subheader("📚 Sheet Berdasarkan Filter")
-    tab1, tab2, tab3 = st.tabs(["Per Kategori Produk", "Per Marketplace", "Per Tahun"])
-
-    with tab1:
+    elif sheet_tab == "Per Kategori":
+        st.subheader("📚 Sheet Berdasarkan Kategori Produk")
         for kategori in sorted(filtered_df['Kategori Produk'].unique()):
             st.markdown(f"### 🗂️ Kategori: {kategori}")
             subset = filtered_df[filtered_df['Kategori Produk'] == kategori]
@@ -166,7 +169,8 @@ if df is not None and not df.empty:
             st.dataframe(prepare_table("Qty Sales", subset))
             st.markdown("---")
 
-    with tab2:
+    elif sheet_tab == "Per Marketplace":
+        st.subheader("📚 Sheet Berdasarkan Marketplace")
         for mp in sorted(filtered_df['Marketplace'].unique()):
             st.markdown(f"### 🛒 Marketplace: {mp}")
             subset = filtered_df[filtered_df['Marketplace'] == mp]
@@ -178,7 +182,8 @@ if df is not None and not df.empty:
             st.dataframe(prepare_table("Qty Sales", subset))
             st.markdown("---")
 
-    with tab3:
+    elif sheet_tab == "Per Tahun":
+        st.subheader("📚 Sheet Berdasarkan Tahun")
         for thn in sorted(filtered_df['Tahun'].unique()):
             st.markdown(f"### 📅 Tahun: {thn}")
             subset = filtered_df[filtered_df['Tahun'] == thn]
