@@ -3,4 +3,3 @@ pandas
 matplotlib
 seaborn
 xlsxwriter
-streamlit-aggrid
