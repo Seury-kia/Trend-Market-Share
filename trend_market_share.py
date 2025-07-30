@@ -69,7 +69,7 @@ if df is not None and not df.empty:
             pivot_df['Gap'] = pivot_df[2025] - pivot_df[2024]
 
         # Tambahkan kolom total untuk sorting
-        pivot_df['Total Sort Value'] = pivot_df[sort_by_year]
+        pivot_df['Total Sort Value'] = pivot_df[sort_by_year] if sort_by_year in pivot_df.columns else 0
 
         # Rename columns
         pivot_df.rename(columns={2024: '2024', 2025: '2025'}, inplace=True)
@@ -117,11 +117,18 @@ if df is not None and not df.empty:
             return ''
 
     def sort_table(df, order='desc', metric='Volume Sales (IDR)'):
-        sort_col = '2024_raw' if sort_by_year == 2024 else '2025_raw'
         if metric == 'Market Share (%)':
-            sort_col = sort_by_year
+            sort_col = str(sort_by_year)
+        else:
+            sort_col = f"{sort_by_year}_raw"
+
+        if sort_col not in df.columns:
+            st.warning(f"⚠️ Kolom untuk sorting '{sort_col}' tidak ditemukan.")
+            return df.style.set_properties(**{'font-size': '13px'})
+
         sorted_df = df.sort_values(by=sort_col, ascending=(order == 'asc'))
-        styled_df = sorted_df.drop(columns=['Total Sort Value'] + [col for col in sorted_df.columns if '_raw' in col])
+        drop_cols = ['Total Sort Value'] + [col for col in sorted_df.columns if '_raw' in col and col in sorted_df.columns]
+        styled_df = sorted_df.drop(columns=drop_cols, errors='ignore')
         styled_df = styled_df.style.set_properties(**{
             'font-size': '13px',
             'text-align': 'left'
