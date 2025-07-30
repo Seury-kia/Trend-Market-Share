@@ -59,12 +59,15 @@ if df is not None and not df.empty:
     plt.tight_layout()
     st.pyplot(fig1)
 
-    # 2. Kontribusi Kategori per Marketplace
+    # 2. Kontribusi Kategori per Marketplace + total penjualan IDR
     st.subheader("Kontribusi Penjualan (IDR) per Kategori dan Marketplace")
     fig2, ax2 = plt.subplots(figsize=(12, 6))
     sns.barplot(data=filtered_df, x="Penjualan (IDR)", y="Kategori Produk", hue="Marketplace", estimator=sum, ci=None, ax=ax2)
     ax2.set_xlabel("Total Penjualan (IDR)")
     st.pyplot(fig2)
+
+    total_penjualan = filtered_df.groupby(['Kategori Produk', 'Marketplace'])['Penjualan (IDR)'].sum().reset_index()
+    st.dataframe(total_penjualan, use_container_width=True)
 
     # 3. Gap Market Share Year-over-Year
     st.subheader("Gap Market Share YoY per Kategori Produk")
