@@ -138,33 +138,40 @@ if df is not None and not df.empty:
                 else:
                     st.dataframe(pivot_display, use_container_width=True, hide_index=True)
 
-                if sort_topflop in ["Top", "Flop"]:
-                    st.subheader(f"\U0001F4C8 Grafik {label} - {'Top 10' if sort_topflop == 'Top' else 'Flop 10'}")
-                    fig, ax1 = plt.subplots(figsize=(12, 6))
+                st.subheader(f"\U0001F4C8 Grafik {label}")
+                fig, ax1 = plt.subplots(figsize=(12, 6))
 
-                    kategori = pivot['Kategori Produk']
-                    x = range(len(kategori))
-                    width = 0.25
+                kategori = pivot['Kategori Produk']
+                x = range(len(kategori))
+                width = 0.25
 
-                    ax1.bar([i - width for i in x], pivot[2024], width=width, label='2024')
-                    ax1.bar(x, pivot[2025], width=width, label='2025')
-                    ax1.bar([i + width for i in x], pivot['Gap'], width=width, label='Gap')
-                    ax1.set_ylabel(label)
-                    ax1.set_xticks(x)
-                    ax1.set_xticklabels(kategori, rotation=45, ha='right')
-                    ax1.legend(loc='upper center', ncol=4)
-                    ax1.grid(False)
+                bars_2024 = ax1.bar([i - width for i in x], pivot[2024], width=width, label='2024')
+                bars_2025 = ax1.bar(x, pivot[2025], width=width, label='2025')
+                bars_gap = ax1.bar([i + width for i in x], pivot['Gap'], width=width, label='Gap')
+                ax1.set_ylabel(label)
+                ax1.set_xticks(x)
+                ax1.set_xticklabels(kategori, rotation=45, ha='right')
+                ax1.legend(loc='upper center', ncol=4)
+                ax1.grid(False)
 
-                    ax2 = ax1.twinx()
-                    ax2.plot(x, pivot['Growth'], color='red', marker='o', label='Growth (%)')
-                    ax2.set_ylabel("Growth (%)")
-                    ax2.yaxis.set_major_formatter(mtick.PercentFormatter())
-                    ax2.grid(False)
+                for bars in [bars_2024, bars_2025, bars_gap]:
+                    for bar in bars:
+                        height = bar.get_height()
+                        if pd.notnull(height):
+                            ax1.annotate(f"{height:,.0f}" if not is_percent else f"{height:.2f}%", 
+                                         xy=(bar.get_x() + bar.get_width() / 2, height),
+                                         xytext=(0, 3), textcoords="offset points",
+                                         ha='center', va='bottom', fontsize=8)
 
-                    fig.tight_layout()
-                    st.pyplot(fig)
-                else:
-                    st.subheader("")
+                ax2 = ax1.twinx()
+                ax2.plot(x, pivot['Growth'], color='red', marker='o', label='Growth (%)')
+                ax2.set_ylabel("Growth (%)")
+                ax2.yaxis.set_major_formatter(mtick.PercentFormatter())
+                ax2.grid(False)
+
+                fig.tight_layout()
+                st.pyplot(fig)
+
             else:
                 st.warning("Data kosong setelah filter diterapkan.")
 
