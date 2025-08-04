@@ -44,14 +44,6 @@ if df is not None and not df.empty:
         sheet_tab = st.radio("Pilih Tampilan:", ["Performance Detail", "Per Kategori Produk", "Per Marketplace", "Per Tahun"])
 
         st.markdown("---")
-        st.header("\U0001F4DD Pilih Jenis Data")
-        selected_metrics = st.multiselect(
-            "Tampilkan metrik:",
-            options=["Market Share (%)", "Volume Sales (IDR)", "Qty Sales"],
-            default=["Market Share (%)"]
-        )
-
-        st.markdown("---")
         st.header("\U0001F50D Filter Data")
 
         marketplace_list = df['Marketplace'].unique().tolist()
@@ -68,6 +60,14 @@ if df is not None and not df.empty:
             selected_tahun = tahun_list
         if 'All' in selected_kategori:
             selected_kategori = kategori_list
+
+        st.markdown("---")
+        st.header("\U0001F4DD Pilih Jenis Data")
+        selected_metrics = st.multiselect(
+            "Tampilkan metrik:",
+            options=["Market Share (%)", "Volume Sales (IDR)", "Qty Sales"],
+            default=["Market Share (%)"]
+        )
 
     filtered_df = df[(df['Marketplace'].isin(selected_marketplace)) & 
                      (df['Tahun'].isin(selected_tahun)) & 
@@ -137,6 +137,30 @@ if df is not None and not df.empty:
                     st.dataframe(pivot_display[ringkas_cols], use_container_width=True, hide_index=True)
                 else:
                     st.dataframe(pivot_display, use_container_width=True, hide_index=True)
+
+                # Grafik Combo
+                st.subheader(f"\U0001F4C8 Grafik {label} - Top/Flop 10")
+                fig, ax1 = plt.subplots(figsize=(12, 6))
+
+                kategori = pivot['Kategori Produk']
+                x = range(len(kategori))
+                width = 0.25
+
+                ax1.bar([i - width for i in x], pivot[2024], width=width, label='2024')
+                ax1.bar(x, pivot[2025], width=width, label='2025')
+                ax1.bar([i + width for i in x], pivot['Gap'], width=width, label='Gap')
+                ax1.set_ylabel(label)
+                ax1.set_xticks(x)
+                ax1.set_xticklabels(kategori, rotation=45, ha='right')
+                ax1.legend(loc='upper left')
+
+                ax2 = ax1.twinx()
+                ax2.plot(x, pivot['Growth'], color='red', marker='o', label='Growth (%)')
+                ax2.set_ylabel("Growth (%)")
+                ax2.yaxis.set_major_formatter(mtick.PercentFormatter())
+
+                fig.tight_layout()
+                st.pyplot(fig)
             else:
                 st.warning("Data kosong setelah filter diterapkan.")
 
